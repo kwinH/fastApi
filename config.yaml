@@ -1,0 +1,36 @@
+api:
+  port: ":3000"
+  mode: "debug"
+
+database:
+  host: "127.0.0.1"
+  port: "3306"
+  db: "oorm_demo"
+  username: "root"
+  password: "root"
+  charset: "utf8mb4"
+  max_idle_conn: 10
+  max_open_conn: 20
+
+redis:
+  host: "127.0.0.1"
+  port: "6379"
+  password: ""
+  db: 0
+
+
+jwt:
+  # token 密钥
+  key: "dgE7B6SPrS%9yLE"
+  # token 过期时间 单位：小时
+  timeout: 72
+
+logger:
+  # 日志存放路径
+  path: ./log.log
+  # 日志等级: debug, info, warn, error
+  level: info
+
+#nsq:
+#  producer: 127.0.0.1:4150
+#  consumer: 127.0.0.1:4161
