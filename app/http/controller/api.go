@@ -6,13 +6,12 @@ import (
 )
 
 type Api struct {
-
 }
 
 // CurrentUser 获取当前用户
-func (a Api)currentUser(c *gin.Context) *model.User {
+func (a Api) currentUser(c *gin.Context) *model.User {
 	if userId, _ := c.Get("userId"); userId != nil {
-		user, err := model.GetUser(userId)
+		user, err := model.GetUser(c, userId)
 		if err == nil {
 			return &user
 		}

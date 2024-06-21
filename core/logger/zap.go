@@ -1,7 +1,9 @@
 package logger
 
 import (
+	"context"
 	"fastApi/core/global"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -10,6 +12,8 @@ import (
 	"os"
 )
 
+const loggerKey = "Log"
+const loggerSugarKey = "LogSugar"
 const TraceId = "traceId"
 
 var logger *zap.Logger
@@ -56,8 +60,31 @@ func CalcTraceId() (traceId string) {
 	return uuid.New().String()
 }
 
-func With(fields ...zap.Field) {
-	global.Log = logger.With(fields...)
-	global.SLog = global.Log.Sugar()
-	global.DB.Logger = NewGormLog(global.Log)
+func With(c *gin.Context, fields ...zap.Field) {
+	log := logger.With(fields...)
+	slog := log.Sugar()
+	db := global.GDB
+	db.Logger = NewGormLog(log)
+	c.Set(loggerKey, log)
+	c.Set(loggerSugarKey, slog)
+	c.Set(global.DBKey, db)
+}
+
+func WithC(c context.Context, fields ...zap.Field) context.Context {
+	log := logger.With(fields...)
+	slog := log.Sugar()
+	db := global.GDB
+	db.Logger = NewGormLog(log)
+	c = context.WithValue(c, loggerKey, log)
+	c = context.WithValue(c, loggerSugarKey, slog)
+	c = context.WithValue(c, global.DBKey, db)
+	return c
+}
+
+func Log(c context.Context) *zap.Logger {
+	return c.Value(loggerKey).(*zap.Logger)
+}
+
+func SLog(c context.Context) *zap.SugaredLogger {
+	return c.Value(loggerSugarKey).(*zap.SugaredLogger)
 }

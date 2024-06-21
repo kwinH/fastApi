@@ -1,8 +1,9 @@
 package mq
 
 import (
+	"context"
 	"fastApi/app/model"
-	"fastApi/core/global"
+	"fastApi/core/logger"
 	"github.com/nsqio/go-nsq"
 )
 
@@ -11,9 +12,9 @@ type SendRegisteredEmail struct {
 }
 
 func (c *SendRegisteredEmail) HandleMessage(msg *nsq.Message) error {
-	return c.Handle(msg, func(data string) error {
-		model.GetUser(1)
-		global.Log.Info("ok")
+	return c.Handle(msg, func(ctx context.Context, data string) error {
+		model.GetUser(ctx, 1)
+		logger.Log(ctx).Info("ok")
 		return nil
 	})
 }

@@ -16,5 +16,5 @@ func init() {
 }
 
 func migrate(cmd *cobra.Command, args []string) {
-	_ = global.DB.AutoMigrate(&model.User{})
+	_ = global.GDB.AutoMigrate(&model.User{})
 }

@@ -14,10 +14,10 @@ type UserService struct {
 }
 
 // Login 用户登录函数
-func (service *UserService) Login(c *gin.Context, loginRequest request.LoginRequest) response.Response {
+func (service *UserService) Login(ctx *gin.Context, loginRequest request.LoginRequest) response.Response {
 	var userModel model.User
 
-	if err := global.DB.Where("user_name = ?", loginRequest.UserName).First(&userModel).Error; err != nil {
+	if err := global.DB(ctx).Where("user_name = ?", loginRequest.UserName).First(&userModel).Error; err != nil {
 		return response.ParamErr("账号或密码错误", nil, nil)
 	}
 
@@ -34,7 +34,7 @@ func (service *UserService) Login(c *gin.Context, loginRequest request.LoginRequ
 }
 
 // valid 验证表单
-func (service *UserService) valid(registerRequest request.RegisterRequest) *response.Response {
+func (service *UserService) valid(ctx *gin.Context, registerRequest request.RegisterRequest) *response.Response {
 	if registerRequest.PasswordConfirm != registerRequest.Password {
 		return &response.Response{
 			Code: 40001,
@@ -43,7 +43,7 @@ func (service *UserService) valid(registerRequest request.RegisterRequest) *resp
 	}
 
 	count := int64(0)
-	global.DB.Model(&model.User{}).Where("nickname = ?", registerRequest.Nickname).Count(&count)
+	global.DB(ctx).Model(&model.User{}).Where("nickname = ?", registerRequest.Nickname).Count(&count)
 	if count > 0 {
 		return &response.Response{
 			Code: 40001,
@@ -52,7 +52,7 @@ func (service *UserService) valid(registerRequest request.RegisterRequest) *resp
 	}
 
 	count = 0
-	global.DB.Model(&model.User{}).Where("user_name = ?", registerRequest.UserName).Count(&count)
+	global.DB(ctx).Model(&model.User{}).Where("user_name = ?", registerRequest.UserName).Count(&count)
 	if count > 0 {
 		return &response.Response{
 			Code: 40001,
@@ -64,7 +64,7 @@ func (service *UserService) valid(registerRequest request.RegisterRequest) *resp
 }
 
 // Register 用户注册
-func (service *UserService) Register(registerRequest request.RegisterRequest) response.Response {
+func (service *UserService) Register(ctx *gin.Context, registerRequest request.RegisterRequest) response.Response {
 	user := model.User{
 		Nickname: registerRequest.Nickname,
 		UserName: registerRequest.UserName,
@@ -72,7 +72,7 @@ func (service *UserService) Register(registerRequest request.RegisterRequest) re
 	}
 
 	// 表单验证
-	if err := service.valid(registerRequest); err != nil {
+	if err := service.valid(ctx, registerRequest); err != nil {
 		return *err
 	}
 
@@ -87,7 +87,7 @@ func (service *UserService) Register(registerRequest request.RegisterRequest) re
 	}
 
 	// 创建用户
-	if err := global.DB.Create(&user).Error; err != nil {
+	if err := global.DB(ctx).Create(&user).Error; err != nil {
 		return response.ParamErr("注册失败", nil, err)
 	}
 

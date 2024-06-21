@@ -1,6 +1,7 @@
 package model
 
 import (
+	"context"
 	"fastApi/core/global"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -34,9 +35,9 @@ const (
 )
 
 // GetUser 用ID获取用户
-func GetUser(ID interface{}) (User, error) {
+func GetUser(ctx context.Context, ID interface{}) (User, error) {
 	var user User
-	result := global.DB.First(&user, ID)
+	result := global.DB(ctx).First(&user, ID)
 	return user, result.Error
 }
 

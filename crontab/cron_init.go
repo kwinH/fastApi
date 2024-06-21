@@ -50,8 +50,9 @@ func CronInit() {
 	Cron.Start()
 }
 
-func WithRequestId(name, traceId string) {
-	logger.With(
+func WithRequestId(ctx context.Context, name, traceId string) context.Context {
+	return logger.WithC(
+		ctx,
 		zap.String("traceId", traceId),
 		zap.String("name", name),
 	)
@@ -62,7 +63,7 @@ func BaseCronFuc(name string, cmd func(context.Context)) func() {
 		traceId := uuid.New().String()
 		ctx := context.WithValue(context.Background(), logger.TraceId, traceId)
 
-		WithRequestId(name, traceId)
+		ctx = WithRequestId(ctx, name, traceId)
 		cmd(ctx)
 	}
 }

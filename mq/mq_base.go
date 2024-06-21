@@ -14,6 +14,8 @@ import (
 
 var MQList []InterfaceMQ
 
+type HandleFunc func(context.Context, string) error
+
 type InterfaceMQ interface {
 	Producer(ctx context.Context, message []byte, delay ...time.Duration) error
 	HandleMessage(msg *nsq.Message) error
@@ -65,7 +67,7 @@ func (b *BaseMQ) Producer(ctx context.Context, message []byte, delay ...time.Dur
 	return err
 }
 
-func (b *BaseMQ) Handle(msg *nsq.Message, h func(string) error) error {
+func (b *BaseMQ) Handle(msg *nsq.Message, h HandleFunc) error {
 	startTime := time.Now()
 
 	var data map[string]string
@@ -79,14 +81,16 @@ func (b *BaseMQ) Handle(msg *nsq.Message, h func(string) error) error {
 		).Error("数据解析失败： " + err.Error())
 	}
 
-	logger.With(
+	ctx := context.WithValue(context.Background(), logger.TraceId, data["traceId"])
+	logger.WithC(
+		ctx,
 		zap.String("traceId", data["traceId"]),
 	)
-	err = h(data["message"])
+	err = h(ctx, data["message"])
 
 	endTime := time.Now()
 	latencyTime := endTime.Sub(startTime)
-	log := global.Log.With(
+	log := logger.Log(ctx).With(
 		zap.String("url", b.GetTopic()),
 		zap.String("params", data["message"]),
 		zap.Uint16("attempts", msg.Attempts),

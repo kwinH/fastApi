@@ -28,7 +28,7 @@ func (a UserController) UserRegister(c *gin.Context) (res interface{}, err error
 		return
 	}
 
-	res = service.Register(param)
+	res = service.Register(c, param)
 	return
 }
 

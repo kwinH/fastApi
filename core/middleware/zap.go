@@ -128,6 +128,7 @@ func AddTraceId() gin.HandlerFunc {
 		traceId := logger.CalcTraceId()
 		ctx.Set(logger.TraceId, traceId)
 		logger.With(
+			ctx,
 			zap.String("traceId", traceId),
 		)
 		ctx.Next()

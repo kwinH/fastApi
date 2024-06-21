@@ -3,7 +3,7 @@ package crontab
 import (
 	"context"
 	"fastApi/app/model"
-	"fastApi/core/global"
+	"fastApi/core/logger"
 )
 
 func init() {
@@ -22,6 +22,6 @@ func (j testJob) getName() string {
 }
 
 func (j testJob) Run(ctx context.Context) {
-	model.GetUser(1)
-	global.Log.Info("tick every 1 second run once")
+	model.GetUser(ctx, 1)
+	logger.Log(ctx).Info("tick every 1 second run once")
 }

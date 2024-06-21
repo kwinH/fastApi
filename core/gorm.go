@@ -43,5 +43,5 @@ func Database() {
 	sqlDB.SetMaxIdleConns(viper.GetInt("database.max_idle_conn"))
 	//打开
 	sqlDB.SetMaxOpenConns(viper.GetInt("database.max_open_conn"))
-	global.DB = db
+	global.GDB = db
 }
