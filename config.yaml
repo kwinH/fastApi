@@ -5,7 +5,7 @@ api:
 database:
   host: "127.0.0.1"
   port: "3306"
-  db: "oorm_demo"
+  db: "gin"
   username: "root"
   password: "root"
   charset: "utf8mb4"

@@ -23,6 +23,7 @@ https://github.com/kwinH/fastApi
 9. [swag](github.com/swaggo/swag): 使用swag快速生成RESTFul API文档
 10. [cron](github.com/robfig/cron/v3): cron是golang中广泛使用的一个定时任务库
 11. [go-nsq](github.com/nsqio/go-nsq): nsq 是一款基于 go 语言开发实现的分布式消息队列组件
+12. [endless](github.com/fvbock/endless) 用于创建和管理 HTTP 服务器的 Go 包，特别是提供了优雅的停机、热重启支持功能
 
 本项目已经预先实现了一些常用的代码方便参考和复用:
 
@@ -115,21 +116,47 @@ https://github.com/kwinH/fastApi
 ```shell
 go mod init go-crud
 export GOPROXY=http://mirrors.aliyun.com/goproxy/
-go run main.go // 自动安装
+bin/fast-api-linux // 自动安装
+```
+
+## 编译
+```bash
+#编译成linux系统可执行文件, bin/fast-api-mac
+make linux
+
+#编译成mac系统可执行文件, bin/fast-api-linux
+make mac
+
+#编译成windows系统可执行文件, bin/fast-api-win
+make win
+
+#会自动编译成当前系统可执行文件
+make
 ```
 
 ## 运行HTTP
 
+### 启动
 > 项目运行后启动在3000端口（可以修改，参考gin文档)
 
 ```shell
-go run main.go server -c config.yaml
+bin/fast-api-linux server -c config.yaml
+```
+
+### 优雅关闭
+```shell
+bin/fast-api-linux server stop
+```
+
+### 平滑重启
+```shell
+bin/fast-api-linux server restart
 ```
 
 ## 定时任务
 
 ```shell
-go run main.go cron -c config.yaml
+bin/fast-api-linux cron -c config.yaml
 ```
 
 ## 消息队列
@@ -153,5 +180,31 @@ nsq:
 ### 运行消费者
 
 ```shell
-go run main.go nq -c config.yaml
+bin/fast-api-linux nq -c config.yaml
+```
+
+# 问题
+## windows 下的信号没有 SIGUSR1、SIGUSR2 等，做兼容处理：
+在 go 的安装目录修改 Go\src\syscall\types_windows.go，增加如下代码：
+```golang
+var signals = [...]string{
+    // 这里省略N行。。。。
+ 
+    /** 兼容windows start */
+    16: "SIGUSR1",
+    17: "SIGUSR2",
+    18: "SIGTSTP",
+    /** 兼容windows end */
+}
+ 
+/** 兼容windows start */
+func Kill(...interface{}) {
+    return;
+}
+const (
+    SIGUSR1 = Signal(0x10)
+    SIGUSR2 = Signal(0x11)
+    SIGTSTP = Signal(0x12)
+)
+/** 兼容windows end */
 ```

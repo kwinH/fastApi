@@ -1,10 +1,10 @@
 PROJECT:=fast-api
 
-linuxBash=GOPROXY=https://goproxy.cn,direct GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o ./bin/${PROJECT}_${@} ./
+linuxBash=GOPROXY=https://goproxy.cn,direct GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o ./bin/${PROJECT}-${@} ./
 
-macBash=GOPROXY=https://goproxy.cn,direct GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o ./bin/${PROJECT}_${@} ./
+macBash=GOPROXY=https://goproxy.cn,direct GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o ./bin/${PROJECT}-${@} ./
 
-winBash=GOPROXY=https://goproxy.cn,direct GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc CGO_ENABLED=0  go build -ldflags "-s -w" -o ./bin/${PROJECT}_${@} ./
+winBash=GOPROXY=https://goproxy.cn,direct GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc CGO_ENABLED=0  go build -ldflags "-s -w" -o ./bin/${PROJECT}-${@} ./
 
 ifeq ($(OS),Windows_NT)
  PLATFORM="windows"
@@ -33,7 +33,7 @@ win:
 	$(winBash)
 
 clean:
-	rm -rf ./bin/${PROJECT}_*
+	rm -rf ./bin/${PROJECT}-*
 
 
 
