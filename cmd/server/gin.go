@@ -26,12 +26,12 @@ func serverStart(cmd *cobra.Command, args []string) {
 		switch args[0] {
 		case "stop":
 			if err := stopServer(); err != nil {
-				fmt.Printf("Error: %#v\n", err)
+				log.Fatalf("stop: %#v\n", err)
 			}
 			return
 		case "restart":
 			if err := restartServer(); err != nil {
-				fmt.Printf("Error: %#v\n", err)
+				log.Fatalf("restart: %#v\n", err)
 			}
 			return
 		}
@@ -44,7 +44,7 @@ func serverStart(cmd *cobra.Command, args []string) {
 	// 装载路由
 	r := router.NewRouter()
 
-//	r.Run(viper.GetString("api.port"))
+	//	r.Run(viper.GetString("api.port"))
 	s := endless.NewServer(viper.GetString("api.port"), r)
 
 	s.BeforeBegin = func(addr string) {
@@ -128,6 +128,6 @@ func restartServer() error {
 
 func removePIDFile() {
 	if err := os.Remove(pidFilePath); err != nil {
-		log.Printf("Failed to remove PID file: %v", err)
+		log.Fatalf("Failed to remove PID file: %v", err)
 	}
 }

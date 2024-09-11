@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"io"
@@ -15,6 +16,7 @@ import (
 const loggerKey = "Log"
 const loggerSugarKey = "LogSugar"
 const TraceId = "traceId"
+const SpanId = "spanId"
 
 var logger *zap.Logger
 
@@ -56,8 +58,14 @@ func getLogWriter() zapcore.WriteSyncer {
 	return zapcore.AddSync(ws)
 }
 
-func CalcTraceId() (traceId string) {
-	return uuid.New().String()
+func CalcTraceId(ctx context.Context) (traceId, spanId string) {
+	span := trace.SpanFromContext(ctx)
+	traceID := span.SpanContext().TraceID()
+	if traceID.IsValid() {
+		return traceID.String(), span.SpanContext().SpanID().String()
+	}
+
+	return uuid.New().String(), ""
 }
 
 func With(c *gin.Context, fields ...zap.Field) {

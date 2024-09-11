@@ -2,7 +2,8 @@
 version: '2'
 services:
   nsqlookupd:
-    image: nsqio/nsq
+    container_name: nsqlookupd
+    image: nsqio/nsq:v1.3.0
     command: /nsqlookupd
     networks:
       - nsq-network
@@ -11,8 +12,9 @@ services:
       - "4161:4161"
       - "4160:4160"
   nsqd:
-    image: nsqio/nsq
-    command: /nsqd --lookupd-tcp-address=nsqlookupd:4160 -broadcast-address=nsqd
+    container_name: nsqd
+    image: nsqio/nsq:v1.3.0
+    command: /nsqd --lookupd-tcp-address=nsqlookupd:4160 -broadcast-address=127.0.0.1
     depends_on:
       - nsqlookupd
     hostname: nsqd
@@ -22,7 +24,8 @@ services:
       - "4151:4151"
       - "4150:4150"
   nsqadmin:
-    image: nsqio/nsq
+    container_name: nsqadmin
+    image: nsqio/nsq:v1.3.0
     command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
     depends_on:
       - nsqlookupd

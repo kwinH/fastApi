@@ -3,8 +3,10 @@ package cmd
 import (
 	"fastApi/cmd/server"
 	"fastApi/core"
+	"fastApi/util"
 	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var RootCmd = &cobra.Command{
@@ -24,6 +26,13 @@ func init() {
 
 func persistentPreRun(cmd *cobra.Command, args []string) {
 	core.CortInit()
+
+	if viper.IsSet("telemetry") {
+		_, err := util.TracerProvider()
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func Execute() {

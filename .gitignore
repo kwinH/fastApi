@@ -1,4 +1,6 @@
 .vscode/
+.idea/
 .env
 go.sum
 *.log
+*.pid

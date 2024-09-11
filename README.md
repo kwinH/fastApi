@@ -24,6 +24,7 @@ https://github.com/kwinH/fastApi
 10. [cron](github.com/robfig/cron/v3): cron是golang中广泛使用的一个定时任务库
 11. [go-nsq](github.com/nsqio/go-nsq): nsq 是一款基于 go 语言开发实现的分布式消息队列组件
 12. [endless](github.com/fvbock/endless) 用于创建和管理 HTTP 服务器的 Go 包，特别是提供了优雅的停机、热重启支持功能
+13. [OpenTelemetry](https://pkg.go.dev/go.opentelemetry.io/otel) 实现分布式追踪和指标收集的功能
 
 本项目已经预先实现了一些常用的代码方便参考和复用:
 
@@ -182,6 +183,17 @@ nsq:
 ```shell
 bin/fast-api-linux nq -c config.yaml
 ```
+
+# 链路追踪
+fast-api 中基于OpenTelemetry集成了链路追踪，配置如下：
+```yaml
+#链路追踪
+telemetry:
+  name: fast-api
+  endpoint: http://127.0.0.1:14268/api/traces # trace信息上报的url
+  sampler: 1.0  # 采样率
+```
+
 
 # 问题
 ## windows 下的信号没有 SIGUSR1、SIGUSR2 等，做兼容处理：

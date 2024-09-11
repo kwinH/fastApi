@@ -34,3 +34,9 @@ logger:
 #nsq:
 #  producer: 127.0.0.1:4150
 #  consumer: 127.0.0.1:4161
+
+#链路追踪
+#telemetry:
+#  name: fast-api
+#  endpoint: http://127.0.0.1:14268/api/traces
+#  sampler: 1.0

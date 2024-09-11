@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fastApi/core/global"
 	"fastApi/core/logger"
-	"fmt"
+	"fastApi/util"
 	"github.com/nsqio/go-nsq"
+	"go.opentelemetry.io/otel/attribute"
+	oteltrace "go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"time"
 )
@@ -48,16 +50,21 @@ func (b *BaseMQ) Producer(ctx context.Context, message []byte, delay ...time.Dur
 
 	traceId := ctx.Value(logger.TraceId).(string)
 	if traceId == "" {
-		traceId = logger.CalcTraceId()
+		traceId, _ = logger.CalcTraceId(ctx)
 	}
 
 	data := map[string]string{
 		"traceId": traceId,
 		"message": string(message),
 	}
+
+	spanId := ctx.Value(logger.SpanId).(string)
+	if spanId != "" {
+		data["spanId"] = spanId
+	}
+
 	message, _ = json.Marshal(data)
 
-	fmt.Printf("traceId: %s, message: %s\n", b.GetTopic(), string(message))
 	if len(delay) == 0 {
 		err = producer.Publish(b.GetTopic(), message) // 发布消息
 	} else {
@@ -68,6 +75,20 @@ func (b *BaseMQ) Producer(ctx context.Context, message []byte, delay ...time.Dur
 }
 
 func (b *BaseMQ) Handle(msg *nsq.Message, h HandleFunc) error {
+	var log *zap.Logger
+	ctx := context.Background()
+
+	defer func() {
+		if r := recover(); r != nil {
+			if log == nil {
+				log = logger.Log(ctx).With(
+					zap.String("url", b.GetTopic()),
+				)
+			}
+			log.Sugar().Errorf("panic: %v", r)
+		}
+	}()
+
 	startTime := time.Now()
 
 	var data map[string]string
@@ -81,19 +102,30 @@ func (b *BaseMQ) Handle(msg *nsq.Message, h HandleFunc) error {
 		).Error("数据解析失败： " + err.Error())
 	}
 
-	ctx := context.WithValue(context.Background(), logger.TraceId, data["traceId"])
-	logger.WithC(
+	var span oteltrace.Span
+	ctx, span, _ = util.ContextWithSpanContext(ctx, "", "", "queue-consumer", b.GetTopic())
+	if span != nil {
+		span.SetAttributes(attribute.String("traceId", data["traceId"]))
+		defer span.End()
+	}
+
+	ctx = context.WithValue(ctx, logger.TraceId, data["traceId"])
+	ctx = logger.WithC(
 		ctx,
 		zap.String("traceId", data["traceId"]),
 	)
+
+	log = logger.Log(ctx).With(
+		zap.String("url", b.GetTopic()),
+		zap.String("params", data["message"]),
+		zap.Uint16("attempts", msg.Attempts),
+	)
+
 	err = h(ctx, data["message"])
 
 	endTime := time.Now()
 	latencyTime := endTime.Sub(startTime)
-	log := logger.Log(ctx).With(
-		zap.String("url", b.GetTopic()),
-		zap.String("params", data["message"]),
-		zap.Uint16("attempts", msg.Attempts),
+	log.With(
 		zap.Duration("runtime", latencyTime),
 	)
 	if err != nil {

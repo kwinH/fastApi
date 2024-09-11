@@ -1,8 +1,10 @@
 package core
 
 import (
+	"context"
 	"fastApi/core/global"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/extra/redisotel/v8"
+	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
 )
 
@@ -19,10 +21,14 @@ func RedisInit() {
 		MaxRetries: 1,
 	})
 
-	_, err := client.Ping().Result()
+	_, err := client.Ping(context.Background()).Result()
 
 	if err != nil {
 		panic("连接Redis不成功" + err.Error())
+	}
+
+	if viper.IsSet("telemetry") {
+		client.AddHook(redisotel.NewTracingHook())
 	}
 
 	global.Redis = client

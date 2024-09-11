@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/plugin/opentelemetry/tracing"
 )
 
 // Database 在中间件中初始化mysql链接
@@ -36,6 +37,12 @@ func Database() {
 	sqlDB, err := db.DB()
 	if err != nil {
 		panic(err)
+	}
+
+	if viper.IsSet("telemetry") {
+		if err = db.Use(tracing.NewPlugin(tracing.WithoutMetrics())); err != nil {
+			panic(err)
+		}
 	}
 
 	//设置连接池

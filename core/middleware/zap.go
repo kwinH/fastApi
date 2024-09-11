@@ -125,8 +125,9 @@ func RecoveryWithZap(stack bool) gin.HandlerFunc {
 func AddTraceId() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// 每个请求生成的请求traceId具有全局唯一性
-		traceId := logger.CalcTraceId()
+		traceId, spanId := logger.CalcTraceId(ctx.Request.Context())
 		ctx.Set(logger.TraceId, traceId)
+		ctx.Set(logger.SpanId, spanId)
 		logger.With(
 			ctx,
 			zap.String("traceId", traceId),

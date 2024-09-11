@@ -21,7 +21,6 @@ func mqStart(cmd *cobra.Command, args []string) {
 	for _, mq := range mq.MQList {
 		initConsumer(mq.GetTopic(), mq.GetChannel(), address, mq)
 	}
-
 	select {}
 }
 
@@ -33,8 +32,8 @@ func initConsumer(topic string, channel string, address string, handler nsq.Hand
 	if err != nil {
 		panic(err)
 	}
-	c.SetLogger(nil, 0)   //屏蔽系统日志
-	c.AddHandler(handler) // 添加消费者接口
+	c.SetLoggerLevel(nsq.LogLevelWarning) //屏蔽系统日志
+	c.AddHandler(handler)                 // 添加消费者接口
 
 	//建立NSQLookupd连接
 	if err := c.ConnectToNSQLookupd(address); err != nil {
