@@ -15,6 +15,7 @@ const DBKey = "DB"
 var (
 	Trans    ut.Translator // 定义一个全局翻译器T
 	Log      *zap.Logger
+	SLog     *zap.SugaredLogger
 	GDB      *gorm.DB // DB 数据库链接单例
 	Redis    *redis.Client
 	Producer *nsq.Producer

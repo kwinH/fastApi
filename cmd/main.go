@@ -22,6 +22,7 @@ func init() {
 	RootCmd.AddCommand(server.StartApi)
 	RootCmd.AddCommand(server.StartCmd)
 	RootCmd.AddCommand(server.StartMQ)
+	RootCmd.AddCommand(server.StartAsynq)
 }
 
 func persistentPreRun(cmd *cobra.Command, args []string) {

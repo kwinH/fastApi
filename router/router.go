@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fastApi/asynq"
 	"fastApi/core/middleware"
 	_ "fastApi/docs" // 千万不要忘了导入把你上一步生成的docs
 	"fastApi/mq"
@@ -35,12 +36,19 @@ func initGin() *gin.Engine {
 		c.String(200, "pong")
 	})
 
-	engine.GET("/queue_test", func(c *gin.Context) {
+	engine.GET("/nsq_test", func(c *gin.Context) {
 		err := mq.NewSendRegisteredEmail().Producer(c, []byte("test"), 1*time.Second)
-		fmt.Printf("\n\n%#v\n\n", err)
+		fmt.Printf("err：%#v", err)
 		c.String(200, "pong")
 	})
 
+	engine.GET("/asynq_test", func(c *gin.Context) {
+		rawData := `{"name":"kwinwong"}`
+		err := asynq.NewTest().Producer(c, []byte(rawData))
+		fmt.Printf("err：%#v", err)
+
+		c.String(200, "pong")
+	})
 	return engine
 }
 

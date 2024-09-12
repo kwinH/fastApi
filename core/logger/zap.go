@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gorm.io/gorm"
 	"io"
 	"os"
 )
@@ -41,6 +42,7 @@ func InitLogger() *zap.Logger {
 	)
 
 	global.Log = zap.New(zapCore)
+	global.SLog = global.Log.Sugar()
 	logger = global.Log
 	return logger
 }
@@ -68,24 +70,30 @@ func CalcTraceId(ctx context.Context) (traceId, spanId string) {
 	return uuid.New().String(), ""
 }
 
-func With(c *gin.Context, fields ...zap.Field) {
+func injectToContext(log *zap.Logger, slog *zap.SugaredLogger, db *gorm.DB, store func(key string, value interface{})) {
+	store(loggerKey, log)
+	store(loggerSugarKey, slog)
+	store(global.DBKey, db)
+}
+
+func createLoggerAndDB(fields ...zap.Field) (*zap.Logger, *zap.SugaredLogger, *gorm.DB) {
 	log := logger.With(fields...)
 	slog := log.Sugar()
 	db := global.GDB
 	db.Logger = NewGormLog(log)
-	c.Set(loggerKey, log)
-	c.Set(loggerSugarKey, slog)
-	c.Set(global.DBKey, db)
+	return log, slog, db
+}
+
+func With(c *gin.Context, fields ...zap.Field) {
+	log, slog, db := createLoggerAndDB(fields...)
+	injectToContext(log, slog, db, c.Set)
 }
 
 func WithC(c context.Context, fields ...zap.Field) context.Context {
-	log := logger.With(fields...)
-	slog := log.Sugar()
-	db := global.GDB
-	db.Logger = NewGormLog(log)
-	c = context.WithValue(c, loggerKey, log)
-	c = context.WithValue(c, loggerSugarKey, slog)
-	c = context.WithValue(c, global.DBKey, db)
+	log, slog, db := createLoggerAndDB(fields...)
+	injectToContext(log, slog, db, func(key string, value interface{}) {
+		c = context.WithValue(c, key, value)
+	})
 	return c
 }
 

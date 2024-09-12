@@ -25,6 +25,7 @@ https://github.com/kwinH/fastApi
 11. [go-nsq](github.com/nsqio/go-nsq): nsq 是一款基于 go 语言开发实现的分布式消息队列组件
 12. [endless](github.com/fvbock/endless) 用于创建和管理 HTTP 服务器的 Go 包，特别是提供了优雅的停机、热重启支持功能
 13. [OpenTelemetry](https://pkg.go.dev/go.opentelemetry.io/otel) 实现分布式追踪和指标收集的功能
+14. [asynq](github.com/hibiken/asynq) 基于 Redis 实现异步任务队列
 
 本项目已经预先实现了一些常用的代码方便参考和复用:
 
@@ -160,7 +161,7 @@ bin/fast-api-linux server restart
 bin/fast-api-linux cron -c config.yaml
 ```
 
-## 消息队列
+## nsq消息队列
 
 ### 先启动nsq服务
 
@@ -178,14 +179,117 @@ nsq:
   consumer: 127.0.0.1:4161
 ```
 
+### 生产者
+> 所有的生产者代码都放在`mq`目录下，并且都继承`BaseMQ`，`BaseMQ`中封装了`Producer`方法，只需要实现`HandleMessage`方法即可
+```go
+package mq
+
+import (
+	"context"
+	"fastApi/app/model"
+	"fastApi/core/logger"
+	"github.com/nsqio/go-nsq"
+)
+
+type SendRegisteredEmail struct {
+	BaseMQ
+}
+
+func (c *SendRegisteredEmail) HandleMessage(msg *nsq.Message) error {
+	return c.Handle(msg, func(ctx context.Context, data string) error {
+		logger.Log(ctx).Info("ok")
+		return nil
+	})
+}
+
+func init() {
+	MQList = append(MQList, NewSendRegisteredEmail())
+}
+
+func NewSendRegisteredEmail() *SendRegisteredEmail {
+	return &SendRegisteredEmail{
+		BaseMQ: BaseMQ{
+			Topic: "sendRegisteredEmail",
+		}}
+}
+
+```
+
+### 触发生产者
+```go
+err := mq.NewSendRegisteredEmail().Producer(ctx, []byte("test"), 1*time.Second)
+fmt.Printf("err：%v", err)
+```
+
 ### 运行消费者
 
 ```shell
 bin/fast-api-linux nq -c config.yaml
 ```
 
+## asysq消息队列（基于redis实现）
+
+### 开启config.yaml配置中的`asysq`选项
+
+```yaml
+...
+asynq:
+  addr: 127.0.0.1:6379
+  password: "Q#W*9hETg*fp0)@jWmXl"
+  db: 0
+```
+
+### 生产者
+> 所有的生产者代码都放在`asynq`目录下,并且都继承`BaseMQ`，`BaseMQ`中封装了`Producer`方法，只需要实现`Consumer`方法即可
+```go
+package asynq
+
+import (
+	"context"
+	"fastApi/core/logger"
+	"github.com/hibiken/asynq"
+)
+
+func init() {
+	MQList = append(MQList, NewTest())
+}
+
+type Test struct {
+	BaseMQ
+}
+
+func NewTest() *Test {
+	return &Test{
+		BaseMQ: BaseMQ{
+			Typename: "test",
+		}}
+}
+
+func (c *Test) Consumer(ctx context.Context, t *asynq.Task) error {
+	logger.SLog(ctx).Infof("type: %v, payload: %s", t.Type(), string(t.Payload()))
+
+	return nil
+}
+
+
+```
+
+### 触发生产者
+```go
+rawData := `{"name":"kwinwong"}`
+err := asynq.NewTest().Producer(c, []byte(rawData))
+fmt.Printf("err：%v", err)
+```
+
+### 运行消费者
+
+```shell
+bin/fast-api-linux asynq -c config.yaml
+```
+
+
 # 链路追踪
-fast-api 中基于OpenTelemetry集成了链路追踪，配置如下：
+fast-api 中基于OpenTelemetry集成了链路追踪，`config.yaml`配置如下：
 ```yaml
 #链路追踪
 telemetry:

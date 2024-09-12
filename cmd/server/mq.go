@@ -32,7 +32,7 @@ func initConsumer(topic string, channel string, address string, handler nsq.Hand
 	if err != nil {
 		panic(err)
 	}
-	c.SetLoggerLevel(nsq.LogLevelWarning) //屏蔽系统日志
+	c.SetLoggerLevel(nsq.LogLevelWarning) //支显示警告级别及以上的日志
 	c.AddHandler(handler)                 // 添加消费者接口
 
 	//建立NSQLookupd连接

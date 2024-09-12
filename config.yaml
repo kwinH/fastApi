@@ -18,7 +18,6 @@ redis:
   password: ""
   db: 0
 
-
 jwt:
   # token 密钥
   key: "dgE7B6SPrS%9yLE"
@@ -34,6 +33,11 @@ logger:
 #nsq:
 #  producer: 127.0.0.1:4150
 #  consumer: 127.0.0.1:4161
+
+#asynq:
+#  addr: 127.0.0.1:6379
+#  password: "Q#W*9hETg*fp0)@jWmXl"
+#  db: 0
 
 #链路追踪
 #telemetry:

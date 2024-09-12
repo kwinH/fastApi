@@ -79,3 +79,6 @@ deploy-dev:
 
 swag-api:
 	@swag init --parseDependency --parseInternal --parseGoList=false   --parseDepth=6 -o ./docs -d .
+
+go-run:
+	@go run main.go server -c config.yaml

@@ -89,6 +89,12 @@ func (b *BaseMQ) Handle(msg *nsq.Message, h HandleFunc) error {
 		}
 	}()
 
+	var span oteltrace.Span
+	ctx, span, _ = util.ContextWithSpanContext(ctx, "", "", "queue-consumer", b.GetTopic())
+	if span != nil {
+		defer span.End()
+	}
+
 	startTime := time.Now()
 
 	var data map[string]string
@@ -102,11 +108,8 @@ func (b *BaseMQ) Handle(msg *nsq.Message, h HandleFunc) error {
 		).Error("数据解析失败： " + err.Error())
 	}
 
-	var span oteltrace.Span
-	ctx, span, _ = util.ContextWithSpanContext(ctx, "", "", "queue-consumer", b.GetTopic())
 	if span != nil {
 		span.SetAttributes(attribute.String("traceId", data["traceId"]))
-		defer span.End()
 	}
 
 	ctx = context.WithValue(ctx, logger.TraceId, data["traceId"])
