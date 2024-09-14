@@ -10,8 +10,6 @@ services:
       - ES_USERNAME=elastic
       - ES_PASSWORD=elastic
       - LOG_LEVEL=debug
-      - JAEGER_USERNAME=admin
-      - JAEGER_PASSWORD=admin
     privileged: true
     restart: always
     ports:
